@@ -13,10 +13,14 @@ if not IS_DUPLICATE:
     print('DEBUG', kokoro.__version__, CUDA_AVAILABLE, misaki.__version__)
 
 CHAR_LIMIT = None if IS_DUPLICATE else 5000
-models = {gpu: KModel().to('cuda' if gpu else 'cpu').eval() for gpu in [False] + ([True] if CUDA_AVAILABLE else [])}
-pipelines = {lang_code: KPipeline(lang_code=lang_code, model=False) for lang_code in 'ab'}
+
+# Ahora incluye los pipelines: inglés ('a', 'b'), español ('e')
+pipelines = {lang_code: KPipeline(lang_code=lang_code, model=False) for lang_code in 'abe'}
 pipelines['a'].g2p.lexicon.golds['kokoro'] = 'kˈOkəɹO'
 pipelines['b'].g2p.lexicon.golds['kokoro'] = 'kˈQkəɹQ'
+pipelines['e'].g2p.lexicon.golds['kokoro'] = 'koˈkoɾo'
+
+models = {gpu: KModel().to('cuda' if gpu else 'cpu').eval() for gpu in [False] + ([True] if CUDA_AVAILABLE else [])}
 
 @spaces.GPU(duration=30)
 def forward_gpu(ps, ref_s, speed):
@@ -44,7 +48,6 @@ def generate_first(text, voice='af_heart', speed=1, use_gpu=CUDA_AVAILABLE):
         return (24000, audio.numpy()), ps
     return None, ''
 
-# Arena API
 def predict(text, voice='af_heart', speed=1):
     return generate_first(text, voice, speed, use_gpu=False)[0]
 
@@ -79,11 +82,21 @@ def generate_all(text, voice='af_heart', speed=1, use_gpu=CUDA_AVAILABLE):
             first = False
             yield 24000, torch.zeros(1).numpy()
 
+# Quotes en inglés
 with open('en.txt', 'r') as r:
     random_quotes = [line.strip() for line in r]
 
 def get_random_quote():
     return random.choice(random_quotes)
+
+# Quotes en español (opcional), crea 'es.txt' si lo deseas
+def get_random_spanish_quote():
+    try:
+        with open('es.txt', 'r', encoding='utf-8') as r:
+            spanish_quotes = [line.strip() for line in r]
+        return random.choice(spanish_quotes)
+    except:
+        return "¡Hola! Prueba las voces en español usando este texto."
 
 def get_gatsby():
     with open('gatsby5k.md', 'r') as r:
@@ -94,46 +107,52 @@ def get_frankenstein():
         return r.read().strip()
 
 CHOICES = {
-'🇺🇸 🚺 Heart ❤️': 'af_heart',
-'🇺🇸 🚺 Bella 🔥': 'af_bella',
-'🇺🇸 🚺 Nicole 🎧': 'af_nicole',
-'🇺🇸 🚺 Aoede': 'af_aoede',
-'🇺🇸 🚺 Kore': 'af_kore',
-'🇺🇸 🚺 Sarah': 'af_sarah',
-'🇺🇸 🚺 Nova': 'af_nova',
-'🇺🇸 🚺 Sky': 'af_sky',
-'🇺🇸 🚺 Alloy': 'af_alloy',
-'🇺🇸 🚺 Jessica': 'af_jessica',
-'🇺🇸 🚺 River': 'af_river',
-'🇺🇸 🚹 Michael': 'am_michael',
-'🇺🇸 🚹 Fenrir': 'am_fenrir',
-'🇺🇸 🚹 Puck': 'am_puck',
-'🇺🇸 🚹 Echo': 'am_echo',
-'🇺🇸 🚹 Eric': 'am_eric',
-'🇺🇸 🚹 Liam': 'am_liam',
-'🇺🇸 🚹 Onyx': 'am_onyx',
-'🇺🇸 🚹 Santa': 'am_santa',
-'🇺🇸 🚹 Adam': 'am_adam',
-'🇬🇧 🚺 Emma': 'bf_emma',
-'🇬🇧 🚺 Isabella': 'bf_isabella',
-'🇬🇧 🚺 Alice': 'bf_alice',
-'🇬🇧 🚺 Lily': 'bf_lily',
-'🇬🇧 🚹 George': 'bm_george',
-'🇬🇧 🚹 Fable': 'bm_fable',
-'🇬🇧 🚹 Lewis': 'bm_lewis',
-'🇬🇧 🚹 Daniel': 'bm_daniel',
+    '🇺🇸 🚺 Heart ❤️': 'af_heart',
+    '🇺🇸 🚺 Bella 🔥': 'af_bella',
+    '🇺🇸 🚺 Nicole 🎧': 'af_nicole',
+    '🇺🇸 🚺 Aoede': 'af_aoede',
+    '🇺🇸 🚺 Kore': 'af_kore',
+    '🇺🇸 🚺 Sarah': 'af_sarah',
+    '🇺🇸 🚺 Nova': 'af_nova',
+    '🇺🇸 🚺 Sky': 'af_sky',
+    '🇺🇸 🚺 Alloy': 'af_alloy',
+    '🇺🇸 🚺 Jessica': 'af_jessica',
+    '🇺🇸 🚺 River': 'af_river',
+    '🇺🇸 🚹 Michael': 'am_michael',
+    '🇺🇸 🚹 Fenrir': 'am_fenrir',
+    '🇺🇸 🚹 Puck': 'am_puck',
+    '🇺🇸 🚹 Echo': 'am_echo',
+    '🇺🇸 🚹 Eric': 'am_eric',
+    '🇺🇸 🚹 Liam': 'am_liam',
+    '🇺🇸 🚹 Onyx': 'am_onyx',
+    '🇺🇸 🚹 Santa': 'am_santa',
+    '🇺🇸 🚹 Adam': 'am_adam',
+    '🇬🇧 🚺 Emma': 'bf_emma',
+    '🇬🇧 🚺 Isabella': 'bf_isabella',
+    '🇬🇧 🚺 Alice': 'bf_alice',
+    '🇬🇧 🚺 Lily': 'bf_lily',
+    '🇬🇧 🚹 George': 'bm_george',
+    '🇬🇧 🚹 Fable': 'bm_fable',
+    '🇬🇧 🚹 Lewis': 'bm_lewis',
+    '🇬🇧 🚹 Daniel': 'bm_daniel',
+
+    # Voces en español
+    '🇪🇸 🚺 Dora': 'ef_dora',
+    '🇪🇸 🚹 Alex': 'em_alex',
+    '🇪🇸 🚹 Santa 🎅': 'em_santa',
 }
+
 for v in CHOICES.values():
     pipelines[v[0]].load_voice(v)
 
 TOKEN_NOTE = '''
-💡 Customize pronunciation with Markdown link syntax and /slashes/ like `[Kokoro](/kˈOkəɹO/)`
+💡 Personaliza la pronunciación usando sintaxis Markdown y /slashes/ como `[Kokoro](/koˈkoɾo/)`
 
-💬 To adjust intonation, try punctuation `;:,.!?—…"()“”` or stress `ˈ` and `ˌ`
+💬 Para ajustar la entonación, prueba puntuación (;:,.!?—…"()“”) o acentos `ˈ` y `ˌ`
 
-⬇️ Lower stress `[1 level](-1)` or `[2 levels](-2)`
+⬇️ Baja el énfasis `[1 nivel](-1)` o `[2 niveles](-2)`
 
-⬆️ Raise stress 1 level `[or](+2)` 2 levels (only works on less stressed, usually short words)
+⬆️ Sube el énfasis `[or](+2)` dos niveles (solo funciona en palabras cortas/poco acentuadas)
 '''
 
 with gr.Blocks() as generate_tab:
@@ -161,12 +180,13 @@ with gr.Blocks() as stream_tab:
         gr.DuplicateButton()
 
 BANNER_TEXT = '''
-[***Kokoro*** **is an open-weight TTS model with 82 million parameters.**](https://huggingface.co/hexgrad/Kokoro-82M)
+[***Kokoro*** **es un modelo TTS open-weight con 82 millones de parámetros.**](https://huggingface.co/hexgrad/Kokoro-82M)
 
-This demo only showcases English, but you can directly use the model to access other languages.
+Esta demo solo muestra voces en inglés y español, pero puedes usar el modelo para otros idiomas también.
 '''
 API_OPEN = os.getenv('SPACE_ID') != 'hexgrad/Kokoro-TTS'
 API_NAME = None if API_OPEN else False
+
 with gr.Blocks() as app:
     with gr.Row():
         gr.Markdown(BANNER_TEXT, container=True)
@@ -174,22 +194,24 @@ with gr.Blocks() as app:
         with gr.Column():
             text = gr.Textbox(label='Input Text', info=f"Up to ~500 characters per Generate, or {'∞' if CHAR_LIMIT is None else CHAR_LIMIT} characters per Stream")
             with gr.Row():
-                voice = gr.Dropdown(list(CHOICES.items()), value='af_heart', label='Voice', info='Quality and availability vary by language')
+                voice = gr.Dropdown(list(CHOICES.items()), value='af_heart', label='Voice', info='Calidad y disponibilidad varían según idioma')
                 use_gpu = gr.Dropdown(
                     [('ZeroGPU 🚀', True), ('CPU 🐌', False)],
                     value=CUDA_AVAILABLE,
                     label='Hardware',
-                    info='GPU is usually faster, but has a usage quota',
+                    info='GPU es más rápido, pero tiene cuota de uso',
                     interactive=CUDA_AVAILABLE
                 )
             speed = gr.Slider(minimum=0.5, maximum=2, value=1, step=0.1, label='Speed')
             random_btn = gr.Button('🎲 Random Quote 💬', variant='secondary')
+            spanish_btn = gr.Button('🎲 Frase en Español 💬', variant='secondary')
             with gr.Row():
                 gatsby_btn = gr.Button('🥂 Gatsby 📕', variant='secondary')
                 frankenstein_btn = gr.Button('💀 Frankenstein 📗', variant='secondary')
         with gr.Column():
             gr.TabbedInterface([generate_tab, stream_tab], ['Generate', 'Stream'])
     random_btn.click(fn=get_random_quote, inputs=[], outputs=[text], api_name=API_NAME)
+    spanish_btn.click(fn=get_random_spanish_quote, inputs=[], outputs=[text], api_name=API_NAME)
     gatsby_btn.click(fn=get_gatsby, inputs=[], outputs=[text], api_name=API_NAME)
     frankenstein_btn.click(fn=get_frankenstein, inputs=[], outputs=[text], api_name=API_NAME)
     generate_btn.click(fn=generate_first, inputs=[text, voice, speed, use_gpu], outputs=[out_audio, out_ps], api_name=API_NAME)
@@ -199,4 +221,4 @@ with gr.Blocks() as app:
     predict_btn.click(fn=predict, inputs=[text, voice, speed], outputs=[out_audio], api_name=API_NAME)
 
 if __name__ == '__main__':
-    app.queue(api_open=API_OPEN).launch(show_api=API_OPEN, ssr_mode=True)
+    app.queue(api_open=API_OPEN).launch(show_api=API_OPEN, ssr_mode=True, share=True)
