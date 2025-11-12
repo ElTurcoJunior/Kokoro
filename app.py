@@ -18,7 +18,6 @@ CHAR_LIMIT = None if IS_DUPLICATE else 5000
 pipelines = {lang_code: KPipeline(lang_code=lang_code, model=False) for lang_code in 'abe'}
 pipelines['a'].g2p.lexicon.golds['kokoro'] = 'kˈOkəɹO'
 pipelines['b'].g2p.lexicon.golds['kokoro'] = 'kˈQkəɹQ'
-pipelines['e'].g2p.lexicon.golds['kokoro'] = 'koˈkoɾo'
 
 models = {gpu: KModel().to('cuda' if gpu else 'cpu').eval() for gpu in [False] + ([True] if CUDA_AVAILABLE else [])}
 
