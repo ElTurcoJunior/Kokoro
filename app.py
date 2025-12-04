@@ -15,7 +15,7 @@ if not IS_DUPLICATE:
 CHAR_LIMIT = None if IS_DUPLICATE else 5000
 
 # Ahora incluye los pipelines: inglés ('a', 'b'), español ('e')
-pipelines = {lang_code: KPipeline(lang_code=lang_code, model=False) for lang_code in 'abe'}
+pipelines = {lang_code: KPipeline(lang_code=lang_code, model=False) for lang_code in 'abep'}
 pipelines['a'].g2p.lexicon.golds['kokoro'] = 'kˈOkəɹO'
 pipelines['b'].g2p.lexicon.golds['kokoro'] = 'kˈQkəɹQ'
 
@@ -139,6 +139,11 @@ CHOICES = {
     '🇪🇸 🚺 Dora': 'ef_dora',
     '🇪🇸 🚹 Alex': 'em_alex',
     '🇪🇸 🚹 Santa 🎅': 'em_santa',
+    
+    # Voces en portugués (Brasil)
+    '🇧🇷 🚺 Dora (PT-BR)': 'pf_dora',
+    '🇧🇷 🚹 Alex (PT-BR)': 'pm_alex',
+    '🇧🇷 🚹 Santa (PT-BR) 🎅': 'pm_santa',
 }
 
 for v in CHOICES.values():
